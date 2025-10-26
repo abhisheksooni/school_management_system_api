@@ -1,30 +1,37 @@
 import { Router } from "express";
-import { addClass, deleteClass, getAllClasses, getAllClassesWithSubjects, updateClass, updateClassWithSubjects } from "../controllers/class/class_controller.js";
-import { addSubject,getSubjects,updateSubject } from "../controllers/class/subject_controller.js";
+import {
+  createClassz,
+  deleteClass,
+  getAllClasses,
+  getAllClassesWithSubjects,
+  updateClass,
+  updateClassWithSubjects,
+} from "../controllers/class/class_controller.js";
+import {
+  addSubject,
+  getSubjects,
+  updateSubject,
+} from "../controllers/class/subject_controller.js";
 
 const router = Router();
 
 // class
-router.post("/class",addClass)
-router.get("/class",getAllClasses)
-router.put("/class/:id",updateClass)
-router.delete("/class/:id",deleteClass)
+router.post("/class", createClassz);
+router.get("/class", getAllClasses);
+router.put("/class/:id", updateClass);
+router.delete("/class/:id", deleteClass);
 
-// Subject 
+// Subject
 router.post("/subject", addSubject);
-router.get("/subject",getSubjects );
+router.get("/subject", getSubjects);
 router.put("/subject/:id", updateSubject);
 // router.post("/subject", addSubject);
 
 // class With Subjects
-router.get("/class_with_subjects",getAllClassesWithSubjects)
-router.put("/class_with_subjects/:id",updateClassWithSubjects)
+router.get("/class_with_subjects", getAllClassesWithSubjects);
+router.put("/class_with_subjects/:id", updateClassWithSubjects);
 
-
-
-
-// Marks 
-
+// Marks
 
 // // Subject routes
 // router.post("/subject", addSubject);
@@ -37,6 +44,5 @@ router.put("/class_with_subjects/:id",updateClassWithSubjects)
 // router.get("/marks", getMarks);
 // router.put("/marks/:id", updateMark);
 // router.delete("marks/:id", deleteMark);
-
 
 export default router;
