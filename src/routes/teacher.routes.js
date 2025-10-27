@@ -8,6 +8,7 @@ import {
   createTeacherController,
   getAllTeachersController,
   getTeacherByIdController,
+  getTeachersByPreviewListController,
 } from "../controllers/teacher/teacherController.js";
 import { createUploadMiddleware } from "../middlewares/imageMulter.js";
 
@@ -72,6 +73,12 @@ router.post(
     res.send({ filename: req.file.filename });
   }
 );
+
+// GET  Get a specific teacher by ID
+router.get("/teachers/preview-list", getTeachersByPreviewListController);
+
+
+
 // router.post("/teachers", createTeacherController);
 
 export default router;

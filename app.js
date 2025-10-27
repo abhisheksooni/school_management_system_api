@@ -1,21 +1,19 @@
-import express from 'express';
-import colors from 'colors';
-import dotenv from 'dotenv';
-import cors from "cors"
-import connectDB from './src/config/db.js';
+import express from "express";
+import colors from "colors";
+import dotenv from "dotenv";
+import cors from "cors";
+import connectDB from "./src/config/db.js";
 
 import Student from "./src/routes/student.routes.js";
 import Teacher from "./src/routes/teacher.routes.js";
-import Class from './src/routes/class.routes.js';
-
-
-
+import Class from "./src/routes/class.routes.js";
+import path from "path";
 
 // Load env vars
 dotenv.config();
 
 // Connect to database
-connectDB()
+connectDB();
 
 const app = express();
 
@@ -26,22 +24,20 @@ const app = express();
 // }));
 app.use(cors());
 
-
-app.use(express.json());
-
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use(express.json()); // fine
+app.use(express.urlencoded({ extended: true })); // fine
 
 // --- ROUTES ---
-app.get('/', (req, res) => {
-  res.send('API is running...');
+app.get("/", (req, res) => {
+  res.send("API is running...");
 });
 
-app.use('/api/v1.0/', Student);
-app.use('/api/v1.0/', Teacher);
-app.use('/api/v1.0/', Class);
+app.use("/api/v1.0/", Student);
+app.use("/api/v1.0/", Teacher);
+app.use("/api/v1.0/", Class);
 
 // --- ROUTES END ---
-
-
 
 const PORT = process.env.PORT || 3030;
 
