@@ -34,9 +34,10 @@ const TeachersBasic = new mongoose.Schema(
     },
     // ✅ New additions:
     isVerified: { type: Boolean, default: false },
-    profile_roll: {
+    role: {
       type: String,
-      enum: ["teacher", "admin", "principal", "hod", "staff", "other"],
+      enum: ["teacher", "admin", "principal", "staff", "dev", "accountant","bus_staff"],
+      // enum: ["teacher", "admin", "principal", "hod", "staff", "other"],
       default: "teacher",
     },
   },
@@ -56,6 +57,8 @@ const TeacherAuth = new mongoose.Schema({
     enum: ["active", "inactive"],
     default: "active",
   }, // Account activity status
+
+  
   addStudentPermissionStatus: {
     type: Boolean,
     default: false,

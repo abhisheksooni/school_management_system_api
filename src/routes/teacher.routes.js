@@ -1,19 +1,21 @@
 import { Router } from "express";
 import {
-  TeacherProfile,
-  TeachersBasicInfo,
-} from "../models/teacher/teacher_model.js";
-import {
   createTeacherAllDataController,
-  createTeacherController,
+  deleteTeacherProfileWithAllData,
   getAllTeachersController,
   getTeacherByIdController,
   getTeachersByPreviewListController,
+  updateTeacherAllDataController
 } from "../controllers/teacher/teacherController.js";
 import { createUploadMiddleware } from "../middlewares/imageMulter.js";
+import { processFiles, uploadFiles } from "../middlewares/uploadMiddleware.js";
+import {
+  TeacherProfile,
+  TeachersBasicInfo,
+} from "../models/teacher/teacher_model.js";
 
 const router = Router();
-const uploadTeacher = await createUploadMiddleware("teachers-profile-images");
+const uploadTeacher = await createUploadMiddleware("teachers");
 // teacher  api/v1.0/teachers/
 
 // Get All teachers
@@ -66,18 +68,22 @@ router.post("/teachers/academic/:id", async (req, res) => {
 // POST Create a new teacher , staff ,
 router.post(
   "/teachers",
-  uploadTeacher,
-  createTeacherAllDataController,
-  (req, res) => {
-    if (!req.file) return res.status(400).send("File missing or too large!");
-    res.send({ filename: req.file.filename });
-  }
+  uploadFiles,
+  processFiles,
+  createTeacherAllDataController
 );
 
+router.put(
+  "/teachers/:id",
+  uploadFiles,
+  processFiles,
+  updateTeacherAllDataController
+);
+
+router.delete("/teachers/delete/:id", deleteTeacherProfileWithAllData)
 // GET  Get a specific teacher by ID
-router.get("/teachers/preview-list", getTeachersByPreviewListController);
-
-
+// summary
+router.get("/teachers/summary", getTeachersByPreviewListController);
 
 // router.post("/teachers", createTeacherController);
 
