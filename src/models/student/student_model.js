@@ -1,152 +1,219 @@
 import mongoose, { Schema } from "mongoose";
 import { customAlphabet } from "nanoid";
+import dayjs from "dayjs";
+const nanoIDs = customAlphabet("1234567890ABCDEFGHIJKLMOPQRSTUVW", 5);
 
-const nanoIDs = customAlphabet("1234567890ABCD", 5);
+/* =====================================================
+   🧍‍♂️ STUDENT PARENT INFORMATION
+   ===================================================== */
 
-// Sub-schema for academic info
+const ParentsInfoSchema = new mongoose.Schema(
+  {
+    student_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentProfile",
+      required: true,
+    },
 
-const ParentsInfoSchema = new mongoose.Schema({
-  student_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "StudentProfile",
-    required: true,
+    father: {
+      name: { type: String },
+      number: { type: String },
+      occupation: { type: String },
+      image: { type: String },
+    },
+    mother: {
+      name: { type: String },
+      number: { type: String },
+      occupation: { type: String },
+      image: { type: String },
+    },
+    guardian: {
+      name: { type: String },
+      image: { type: String },
+      number: { type: String },
+    },
   },
-
-  father: {
-    name: { type: String },
-    number: { type: String },
-    occupation: { type: String },
-    image: { type: String },
-  },
-  mother: {
-    name: { type: String },
-    number: { type: String },
-    occupation: { type: String },
-    image: { type: String },
-  },
-  guardian: {
-    name: { type: String },
-    image: { type: String },
-    number: { type: String },
-  },
-
-  // father_name: { type: String, },
-  // father_number: { type: String, },
-  // father_occupation: { type: String, },
-  // father_image: { type: String, },
-
-  // mother_name: { type: String, },
-  // mother_number: { type: String, },
-  // mother_occupation: { type: String, },
-  // mother_image: { type: String, },
-
-  // guardian_name: { type: String, },
-  // guardian_image: { type: String, },
-  // guardian_number: { type: String, },
-});
+  { timestamps: true }
+);
 
 export const StudentParentsInfo = mongoose.model(
   "StudentParentsInfo",
   ParentsInfoSchema
 );
 
-const basicInfoSchema = new mongoose.Schema({
-  student_id: {
-    type: mongoose.Schema.Types.ObjectId,
-  },
-  admission_form_number: { type: String },
-  date_of_birth: { type: Date },
-  // student_dob: { type: Date, },
-  academic_year: { type: String },
-  admission_year: { type: String },
-  admission_number: { type: String },
-  admission_date: { type: Date, default: Date.now },
-  special_talent: { type: String },
-  interest: { type: String },
+/* =====================================================
+   📘 STUDENT BASIC INFORMATION
+   ===================================================== */
+const basicInfoSchema = new mongoose.Schema(
+  {
+    student_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+    admission_form_number: { type: String },
+    date_of_birth: { type: Date },
+    academic_year: { type: String },
 
-  gender: { type: String, enum: ["Female", "Male", "EWS", "Transgender"] },
-  //category
-  caste_category: { type: String, enum: ["General", "OBC", "SC", "ST", "EWS"] },
-  blood_group: {
-    type: String,
-    enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-  },
-  religion: { type: String },
-  mother_tongue: { type: String },
-  nationality: { type: String },
+    admission_date: { type: Date, default: Date.now },
+    // admission_year: { type: String },
+    admission_number: { type: String },
 
-  address_local: { type: String },
-  address_permanent: { type: String },
-  // city: { type: String, },
-  // state: { type: String, },
-  // zip_code: { type: String, },
-});
+    special_talent: { type: String },
+    interest: { type: String },
+
+    gender: {
+      type: String,
+      enum: ["female", "male", "transgender"],
+      lowercase: true,
+    },
+
+    //category
+    caste_category: {
+      type: String,
+      enum: ["general", "obc", "sc", "st", "ews"],
+      lowercase: true,
+    },
+    blood_group: {
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    },
+    religion: {
+      type: String,
+      enum: [
+        "hindu",
+        "muslim",
+        "christian",
+        "sikh",
+        "buddhist",
+        "jain",
+        "other",
+      ],
+      // trim: true,
+      lowercase: true, // ✅ optional: if you want consistent data storage
+    },
+    mother_tongue: { type: String },
+    nationality: {
+      type: String,
+      enum: ["indian", "Other"],
+      lowercase: true, // ✅ Recommended for consistent storage
+      default: "indian", // optional: agar mostly Indian students hi hain
+    },
+
+    address_local: { type: String },
+    address_permanent: { type: String },
+    // city: { type: String, },
+    // state: { type: String, },
+    // zip_code: { type: String, },
+  },
+  { timestamps: true }
+);
 
 export const StudentBasicInfo = mongoose.model(
   "StudentBasicInfo",
   basicInfoSchema
 );
 
-const advancedInfoSchema = new mongoose.Schema({
-  student_id: {
-    type: mongoose.Schema.Types.ObjectId,
+/* =====================================================
+   📗 STUDENT ADDITIONAL / ADVANCED INFORMATION
+   ===================================================== */
+const advancedInfoSchema = new mongoose.Schema(
+  {
+    student_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+
+    created_by_teacher_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TeacherProfile",
+    },
+
+    aadhar_number: { type: String },
+    apaar_id: { type: String },
+    pen_number: { type: String },
+    sssmid_number: { type: String },
+
+    bank_name: { type: String },
+    bank_account_number: { type: String },
+    bank_ifsc_code: { type: String },
+    bank_branch_name: { type: String },
+
+    disability_type: {
+      type: String,
+      enum: ["none", "visual", "hearing", "locomotor", "mental"],
+      lowercase: true,
+    },
+    health_issues: { type: String },
+
+    // previous Academic records
+    prev_school_name: { type: String },
+    prev_class_name: { type: String },
+    prev_academic_year: { type: String },
+    prev_score_percentage: { type: String },
+    prev_exam_results: { type: String },
+    transfer_certificate_no: { type: String },
+
+    // documents images
+    doc_birth_certificate: { type: String },
+    doc_aadhaar_student: { type: String },
+    doc_aadhaar_father: { type: String },
+    doc_aadhaar_mother: { type: String },
+    doc_bank_passbook: { type: String },
+    doc_sssmid_card: { type: String },
+    doc_transfer_certificate: { type: String },
+    doc_pan: { type: String },
+    doc_apaar_id: { type: String },
+    doc_rtl_letter: { type: String },
+
+    // birth_certificate_image: { type: String, },
+    // aadhar_card_student_image: { type: String, },
+    // aadhar_card_father_image: { type: String, },
+    // aadhar_card_mother_image: { type: String, },
+    // bank_passbook_image: { type: String, },
+    // sssmid_card_image: { type: String, },
+    // transfer_certificate_image: { type: String, },
+    // pen_image: { type: String, },
+    // apaarid_image: { type: String, },
+    // rtl_letter_image: { type: String, },
+
+    // any_other: { type: String, },
   },
-
-  aadhar_number: { type: String },
-
-  bank_name: { type: String },
-  bank_account_number: { type: String },
-  bank_ifsc_code: { type: String },
-  bank_branch_name: { type: String },
-
-  pen_number: { type: String },
-  sssmid_number: { type: String },
-
-  disability_type: {
-    type: String,
-    enum: ["None", "Visual", "Hearing", "Locomotor", "Mental"],
-  },
-
-  health_issues: { type: String },
-  apaar_id: { type: String },
-
-  // previous Academic records
-  prev_school_name: { type: String },
-  prev_class_name: { type: String },
-  prev_academic_year: { type: String },
-  prev_score_percentage: { type: String },
-  prev_exam_results: { type: String },
-  transfer_certificate_no: { type: String },
-
-  // documents images
-  doc_birth_certificate: { type: String },
-  doc_aadhaar_student: { type: String },
-  doc_aadhaar_father: { type: String },
-  doc_aadhaar_mother: { type: String },
-  doc_bank_passbook: { type: String },
-  doc_sssmid_card: { type: String },
-  doc_transfer_certificate: { type: String },
-  doc_pen: { type: String },
-  doc_apaar_id: { type: String },
-  doc_rtl_letter: { type: String },
-
-  // birth_certificate_image: { type: String, },
-  // aadhar_card_student_image: { type: String, },
-  // aadhar_card_father_image: { type: String, },
-  // aadhar_card_mother_image: { type: String, },
-  // bank_passbook_image: { type: String, },
-  // sssmid_card_image: { type: String, },
-  // transfer_certificate_image: { type: String, },
-  // pen_image: { type: String, },
-  // apaarid_image: { type: String, },
-  // rtl_letter_image: { type: String, },
-
-  // any_other: { type: String, },
-});
+  { timestamps: true }
+);
 export const StudentAdvancedInfo = mongoose.model(
   "StudentAdvancedInfo",
   advancedInfoSchema
 );
+
+/* =====================================================
+   💰 STUDENT FEE RECORD
+   ===================================================== */
+ const StudentFeesPayment = new mongoose.Schema(
+  {
+    student_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      // required: true,
+    },
+    feesInfo_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentFeesInfo",
+      // required: true,
+    },
+
+    payment_amount: { type: Number },
+    payment_date: { type: Date, default: dayjs().toDate() },
+    payment_mode: {
+      type: String,
+      enum: ["Cash", "Online", "Cheque", "Other"],
+      default: "Cash",
+    },
+    note: { type: String },
+    receipt_number: String,
+  },
+  { timestamps: true }
+);
+
+export const StudentFeesPaymentsInfo = mongoose.model("StudentFeesPaymentsInfo", StudentFeesPayment);
+
 
 const feesInfo = new mongoose.Schema(
   {
@@ -155,23 +222,23 @@ const feesInfo = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
-    total_fee_amount: { type: Number, default: 0 },
+
+    total_fee: { type: Number, default: 0 },
     amount_paid: { type: Number, default: 0 },
     amount_due: { type: Number, default: 0 },
-    payments: [
-      {
-        payment_amount: Number,
-        payment_date: { type: Date, default: Date.now },
-        payment_mode: String,
-        receipt_number: String,
-      },
-    ],
+
+    payments: [StudentFeesPayment],
   },
   { timestamps: true }
 );
-
 export const StudentFeesInfo = mongoose.model("StudentFeesInfo", feesInfo);
 
+
+
+
+/* =====================================================
+   📅 STUDENT ATTENDANCE
+   ===================================================== */
 const attendanceInfoSchema = new mongoose.Schema(
   {
     student_id: {
@@ -195,7 +262,7 @@ const attendanceInfoSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
+); // Prevent duplicate attendance per student per date
 // Duplicate se bachane ke liye
 attendanceInfoSchema.index({ student_id: 1, date: 1 }, { unique: true });
 export const StudentAttendanceRecord = mongoose.model(
@@ -203,7 +270,9 @@ export const StudentAttendanceRecord = mongoose.model(
   attendanceInfoSchema
 );
 
-// Class
+/* =====================================================
+   🏫 CLASS SCHEMA
+   ===================================================== */
 const ClassSchema = new mongoose.Schema(
   {
     name: { type: String, required: true }, // Class Name "1th" ,"2th"
@@ -226,10 +295,7 @@ const ClassSchema = new mongoose.Schema(
       },
     ],
   },
-  {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // 👇 Virtual populate for subjects
@@ -238,86 +304,83 @@ ClassSchema.virtual("subjects", {
   localField: "_id", // Class _id
   foreignField: "class_id", // Subject.class_id
 });
-
 export const SchoolClass = mongoose.model("SchoolClass", ClassSchema);
 
-// Subjects
-const subjectsSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // e.g. "Math" ,"Hindi"
-  subject_code: { type: String },
-  max_marks: { type: Number, default: 100 },
-  grade: { type: String },
-  teacher_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Teachers",
-
-    default: null,
-  },
-  class_id: [
-    {
+/* =====================================================
+   📘 SUBJECT SCHEMA
+   ===================================================== */
+const subjectsSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true }, // e.g. "Math" ,"Hindi"
+    subject_code: { type: String },
+    max_marks: { type: Number, default: 100 },
+    grade: { type: String },
+    teacher_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "SchoolClass",
-      required: true,
+      ref: "Teachers",
+
       default: null,
     },
-  ],
-});
-
+    class_id: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SchoolClass",
+        required: true,
+        default: null,
+      },
+    ],
+  },
+  { timestamps: true }
+);
 export const ClassSubject = mongoose.model("ClassSubject", subjectsSchema);
 
-const StudentSubjectSchema = new mongoose.Schema({
-  student_id: { type: mongoose.Schema.Types.ObjectId, ref: "StudentProfile" },
-  subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassSubject" },
-  obtained_marks: Number,
-  grade: String,
-});
-
+/* =====================================================
+   📚 STUDENT SUBJECT RECORD
+   ===================================================== */
+const StudentSubjectSchema = new mongoose.Schema(
+  {
+    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "StudentProfile" },
+    subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassSubject" },
+    obtained_marks: Number,
+    grade: String,
+  },
+  { timestamps: true }
+);
 export const StudentSubject = mongoose.model(
   "StudentSubject",
   StudentSubjectSchema
 );
 
+/* =====================================================
+   🔐 STUDENT ACCOUNT / AUTH INFO
+   ===================================================== */
 const StudentAuthSchema = new mongoose.Schema(
   {
-    createStudentTeacherId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "TeacherProfile",
-    },
-
+    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "StudentProfile" },
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["student", "admin"], default: "student" },
-    activeStatus: { type: Boolean, default: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "TeacherProfile" },
-    createdAt: { type: Date, default: Date.now },
+    active_status: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
-
 export const StudentAuthInfo = mongoose.model(
   "StudentAuthInfo",
   StudentAuthSchema
 );
 
-// Main Student Schema
+/* =====================================================
+   🧍‍♂️ MAIN STUDENT SCHEMA
+   ===================================================== */
 const StudentSchema = new Schema(
   {
-    //---- basicInfo ------
-
-    student_code: { type: String, default: () => nanoIDs(), unique: true },
     name: {
       first: { type: String },
       last: { type: String },
     },
     full_name: { type: String },
-    roll_number: { type: String },
-    class_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SchoolClass",
-      required: true,
-      default: null,
-    }, // Class ID
-
+    roll_number: { type: String, unique: true },
+    student_code: { type: String, default: () => nanoIDs(), unique: true },
     profile_image: { type: String }, // student_image
     enrolled_subjects: [
       //student_subjects
@@ -328,6 +391,12 @@ const StudentSchema = new Schema(
     ],
 
     // ++++++++ References To other Modules +++++++++
+    class_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SchoolClass",
+      required: true,
+      default: null,
+    }, // Class ID Adminson
 
     basic_info_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -381,16 +450,10 @@ const StudentSchema = new Schema(
     },
 
     // StudentAuthInfo
-
     // schoolUserInfo: { type: mongoose.Schema.Types.ObjectId, ref: "SchoolUserInfo",required:true },
-
     // academicInfo: { type: mongoose.Schema.Types.ObjectId, ref: "AcademicInfo", default: null },
-
     // ---- otherInfo ------
-    // photo
-
     // -----attendanceInfo---
-
     // ----ExtraCurricularInfo---
     //----ExamInfo---
   },
