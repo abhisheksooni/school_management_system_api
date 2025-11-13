@@ -1,0 +1,13 @@
+{
+  "watch": [
+    "src" ,"./app.js"
+  ],
+  "ignore": ["node_modules","uploads","uploads/*"],
+  "ext": "js,json",
+  
+  "delay": "15",
+  "legacyWatch": true
+}
+
+
+
