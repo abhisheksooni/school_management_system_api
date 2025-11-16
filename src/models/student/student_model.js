@@ -1,6 +1,6 @@
+import dayjs from "dayjs";
 import mongoose, { Schema } from "mongoose";
 import { customAlphabet } from "nanoid";
-import dayjs from "dayjs";
 const nanoIDs = customAlphabet("1234567890ABCDEFGHIJKLMOPQRSTUVW", 5);
 
 /* =====================================================
@@ -16,21 +16,21 @@ const ParentsInfoSchema = new mongoose.Schema(
     },
 
     father: {
-      name: { type: String },
-      number: { type: String },
-      occupation: { type: String },
-      image: { type: String },
+      name: { type: String ,default:"N/A"},
+      number: { type: String,default:"N/A" },
+      occupation: { type: String,default:"N/A" },
+      image: { type: String ,default:"N/A"},
     },
     mother: {
-      name: { type: String },
-      number: { type: String },
-      occupation: { type: String },
-      image: { type: String },
+      name: { type: String ,default:"N/A"},
+      number: { type: String ,default:"N/A"},
+      occupation: { type: String ,default:"N/A"},
+      image: { type: String ,default:"N/A"},
     },
     guardian: {
-      name: { type: String },
-      image: { type: String },
-      number: { type: String },
+      name: { type: String ,default:"N/A"},
+      image: { type: String,default:"N/A" },
+      number: { type: String,default:"N/A" },
     },
   },
   { timestamps: true }
@@ -48,22 +48,31 @@ const basicInfoSchema = new mongoose.Schema(
   {
     student_id: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentProfile",
     },
-    admission_form_number: { type: String },
-    date_of_birth: { type: Date },
-    academic_year: { type: String },
+    admission_form_number: { type: String, default: "" },
+    date_of_birth: { type: Date ,default:""},
+
+    academic_year: {
+      type: String,
+      default: () => {
+        const year = dayjs().year();
+        return `${year}-${year + 1}`;
+      },
+    },
 
     admission_date: { type: Date, default: Date.now },
     // admission_year: { type: String },
-    admission_number: { type: String },
+    admission_number: { type: String ,default:"N/A"},
 
-    special_talent: { type: String },
-    interest: { type: String },
+    special_talent: { type: String ,default:"N/A"},
+    interest: { type: String ,default:"N/A"},
 
     gender: {
       type: String,
       enum: ["female", "male", "transgender"],
       lowercase: true,
+      // required:true
     },
 
     //category
@@ -71,10 +80,12 @@ const basicInfoSchema = new mongoose.Schema(
       type: String,
       enum: ["general", "obc", "sc", "st", "ews"],
       lowercase: true,
+      // required:true
     },
     blood_group: {
       type: String,
       enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      // required:true
     },
     religion: {
       type: String,
@@ -87,10 +98,11 @@ const basicInfoSchema = new mongoose.Schema(
         "jain",
         "other",
       ],
+      // required:true,
       // trim: true,
       lowercase: true, // ✅ optional: if you want consistent data storage
     },
-    mother_tongue: { type: String },
+    mother_tongue: { type: String ,default:"Hindi"},
     nationality: {
       type: String,
       enum: ["indian", "Other"],
@@ -98,8 +110,8 @@ const basicInfoSchema = new mongoose.Schema(
       default: "indian", // optional: agar mostly Indian students hi hain
     },
 
-    address_local: { type: String },
-    address_permanent: { type: String },
+    address_local: { type: String ,default:"N/A"},
+    address_permanent: { type: String ,default:"N/A"},
     // city: { type: String, },
     // state: { type: String, },
     // zip_code: { type: String, },
@@ -119,6 +131,7 @@ const advancedInfoSchema = new mongoose.Schema(
   {
     student_id: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentProfile",
     },
 
     created_by_teacher_id: {
@@ -186,34 +199,38 @@ export const StudentAdvancedInfo = mongoose.model(
 /* =====================================================
    💰 STUDENT FEE RECORD
    ===================================================== */
- const StudentFeesPayment = new mongoose.Schema(
+const StudentFeesPayment = new mongoose.Schema(
   {
     student_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
+      default: null,
       // required: true,
     },
     feesInfo_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "StudentFeesInfo",
+      default: null,
       // required: true,
     },
 
-    payment_amount: { type: Number },
+    payment_amount: { type: Number, default: null },
     payment_date: { type: Date, default: dayjs().toDate() },
     payment_mode: {
       type: String,
-      enum: ["Cash", "Online", "Cheque", "Other"],
+      enum: ["Cash", "Online", "Cheque", "Card", "Other"],
       default: "Cash",
     },
-    note: { type: String },
-    receipt_number: String,
+    note: { type: String, default: "" },
+    receipt_number: { type: String, default: "N/A" },
   },
   { timestamps: true }
 );
 
-export const StudentFeesPaymentsInfo = mongoose.model("StudentFeesPaymentsInfo", StudentFeesPayment);
-
+export const StudentFeesPaymentsInfo = mongoose.model(
+  "StudentFeesPaymentsInfo",
+  StudentFeesPayment
+);
 
 const feesInfo = new mongoose.Schema(
   {
@@ -232,9 +249,6 @@ const feesInfo = new mongoose.Schema(
   { timestamps: true }
 );
 export const StudentFeesInfo = mongoose.model("StudentFeesInfo", feesInfo);
-
-
-
 
 /* =====================================================
    📅 STUDENT ATTENDANCE
@@ -276,14 +290,16 @@ export const StudentAttendanceRecord = mongoose.model(
 const ClassSchema = new mongoose.Schema(
   {
     name: { type: String, required: true }, // Class Name "1th" ,"2th"
-    section: String, // A,B,C
-    class_teacher_name: String,
+    section: { type: String, default: "N/A" }, // A,B,C
+    class_teacher_name: { type: String, default: "N/A" }, // A,B,C
+
     subjects_ids: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ClassSubject",
         required: true,
         default: null,
+        // default:"N/A"
       },
     ],
     students_ids: [
@@ -312,13 +328,12 @@ export const SchoolClass = mongoose.model("SchoolClass", ClassSchema);
 const subjectsSchema = new mongoose.Schema(
   {
     name: { type: String, required: true }, // e.g. "Math" ,"Hindi"
-    subject_code: { type: String },
-    max_marks: { type: Number, default: 100 },
-    grade: { type: String },
+    subject_code: { type: String, default: "N/A" },
+    max_marks: { type: Number, default: null },
+    grade: { type: String, default: "N/A" },
     teacher_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teachers",
-
       default: null,
     },
     class_id: [
@@ -326,6 +341,7 @@ const subjectsSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "SchoolClass",
         required: true,
+
         default: null,
       },
     ],
@@ -341,8 +357,8 @@ const StudentSubjectSchema = new mongoose.Schema(
   {
     student_id: { type: mongoose.Schema.Types.ObjectId, ref: "StudentProfile" },
     subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassSubject" },
-    obtained_marks: Number,
-    grade: String,
+    obtained_marks: { type: Number, default: null },
+    grade: { type: String, default: "N/A" },
   },
   { timestamps: true }
 );
@@ -375,13 +391,14 @@ export const StudentAuthInfo = mongoose.model(
 const StudentSchema = new Schema(
   {
     name: {
-      first: { type: String },
-      last: { type: String },
+      first: { type: String, required: true },
+      last: { type: String, required: true },
     },
     full_name: { type: String },
     roll_number: { type: String, unique: true },
     student_code: { type: String, default: () => nanoIDs(), unique: true },
-    profile_image: { type: String }, // student_image
+    profile_image: { type: String, default: "N/A" }, // student_image
+
     enrolled_subjects: [
       //student_subjects
       {
