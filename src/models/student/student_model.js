@@ -16,21 +16,21 @@ const ParentsInfoSchema = new mongoose.Schema(
     },
 
     father: {
-      name: { type: String ,default:"N/A"},
-      number: { type: String,default:"N/A" },
-      occupation: { type: String,default:"N/A" },
-      image: { type: String ,default:"N/A"},
+      name: { type: String, default: "N/A" },
+      number: { type: String, default: "N/A" },
+      occupation: { type: String, default: "N/A" },
+      image: { type: String, default: "N/A" },
     },
     mother: {
-      name: { type: String ,default:"N/A"},
-      number: { type: String ,default:"N/A"},
-      occupation: { type: String ,default:"N/A"},
-      image: { type: String ,default:"N/A"},
+      name: { type: String, default: "N/A" },
+      number: { type: String, default: "N/A" },
+      occupation: { type: String, default: "N/A" },
+      image: { type: String, default: "N/A" },
     },
     guardian: {
-      name: { type: String ,default:"N/A"},
-      image: { type: String,default:"N/A" },
-      number: { type: String,default:"N/A" },
+      name: { type: String, default: "N/A" },
+      image: { type: String, default: "N/A" },
+      number: { type: String, default: "N/A" },
     },
   },
   { timestamps: true }
@@ -51,7 +51,7 @@ const basicInfoSchema = new mongoose.Schema(
       ref: "StudentProfile",
     },
     admission_form_number: { type: String, default: "" },
-    date_of_birth: { type: Date ,default:""},
+    date_of_birth: { type: Date, default: "" },
 
     academic_year: {
       type: String,
@@ -63,10 +63,10 @@ const basicInfoSchema = new mongoose.Schema(
 
     admission_date: { type: Date, default: Date.now },
     // admission_year: { type: String },
-    admission_number: { type: String ,default:"N/A"},
+    admission_number: { type: String, default: "N/A" },
 
-    special_talent: { type: String ,default:"N/A"},
-    interest: { type: String ,default:"N/A"},
+    special_talent: { type: String, default: "N/A" },
+    interest: { type: String, default: "N/A" },
 
     gender: {
       type: String,
@@ -102,7 +102,7 @@ const basicInfoSchema = new mongoose.Schema(
       // trim: true,
       lowercase: true, // ✅ optional: if you want consistent data storage
     },
-    mother_tongue: { type: String ,default:"Hindi"},
+    mother_tongue: { type: String, default: "Hindi" },
     nationality: {
       type: String,
       enum: ["indian", "Other"],
@@ -110,8 +110,8 @@ const basicInfoSchema = new mongoose.Schema(
       default: "indian", // optional: agar mostly Indian students hi hain
     },
 
-    address_local: { type: String ,default:"N/A"},
-    address_permanent: { type: String ,default:"N/A"},
+    address_local: { type: String, default: "N/A" },
+    address_permanent: { type: String, default: "N/A" },
     // city: { type: String, },
     // state: { type: String, },
     // zip_code: { type: String, },
@@ -262,23 +262,51 @@ const attendanceInfoSchema = new mongoose.Schema(
     },
     date: {
       type: Date,
+      // default: Date.now,
       required: true,
     },
-    attendance_status: {
+    status: {
       type: String,
-      enum: ["P", "A", "H", "S"],
+      enum: ["P", "A", "L", "H", "S"],
       required: true,
     },
-    // ["Present", "Absent", "Holiday", "Sunday"]
+    // ["Present", "Absent","Late", "Holiday", "Sunday"]
     remark: {
       type: String,
       default: "",
     },
+    class_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "SchoolClass",
+          required: true,
+          // index: true,
+        },
+       
+        recorded_by: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "TeacherProfile", // Kaun mark kar raha tha
+          required: true,
+        },
+    
+        is_active: {
+          type: Boolean,
+          default: true, // Soft delete / deactivated attendance
+        },
   },
   { timestamps: true }
-); // Prevent duplicate attendance per student per date
-// Duplicate se bachane ke liye
-attendanceInfoSchema.index({ student_id: 1, date: 1 }, { unique: true });
+
+
+); 
+/// ✅ Prevent duplicate attendance
+attendanceInfoSchema.index(
+  { student_id: 1, class_id: 1, date: 1 },
+  { unique: true }
+);
+
+// 🔹 Optional index for class-wide queries: fast filter by class/date
+attendanceInfoSchema.index({ class_id: 1, date: 1 });
+
+
 export const StudentAttendanceRecord = mongoose.model(
   "StudentAttendanceRecord",
   attendanceInfoSchema
@@ -302,14 +330,14 @@ const ClassSchema = new mongoose.Schema(
         // default:"N/A"
       },
     ],
-    students_ids: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "StudentProfile",
-        required: true,
-        default: null,
-      },
-    ],
+    // students_ids: [
+    //   {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "StudentProfile",
+    //     required: true,
+    //     default: null,
+    //   },
+    // ],
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -333,7 +361,7 @@ const subjectsSchema = new mongoose.Schema(
     grade: { type: String, default: "N/A" },
     teacher_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teachers",
+      ref: "TeacherProfile",
       default: null,
     },
     class_id: [

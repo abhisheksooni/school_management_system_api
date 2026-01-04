@@ -1,6 +1,0 @@
-{
-  "watch": ["src/app.js", "routes", "models", "controllers"],
-  "ext": "js,json",
-  "ignore": ["node_modules"],
-  "legacyWatch": true
-}

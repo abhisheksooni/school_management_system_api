@@ -1,13 +1,18 @@
 import express from "express";
-import colors from "colors";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import chalk from "chalk";
+
+
 import connectDB from "./src/config/db.js";
 
 import Student from "./src/routes/student.routes.js";
 import Teacher from "./src/routes/teacher.routes.js";
 import Class from "./src/routes/class.routes.js";
-import path from "path";
+import StudentFee from "./src/routes/fee.Routes.js";
+import auth from "./src/routes/auth.routes.js";
+import { devLog } from "./src/utils/devlogger.js";
 
 // Load env vars
 dotenv.config();
@@ -33,14 +38,19 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
+// API V1
 app.use("/api/v1.0/", Student);
 app.use("/api/v1.0/", Teacher);
 app.use("/api/v1.0/", Class);
+app.use("/api/v1.0/", auth);
+
+// API V1.1 NEW THINKINGS 
+app.use("/api/v1.1/fees/", StudentFee);
 
 // --- ROUTES END ---
 
 const PORT = process.env.PORT || 3030;
 
 app.listen(PORT, () => {
-  console.log(colors.yellow(`Server started on port ${PORT}`));
+  devLog(`Server started on port ${chalk.bold.red(PORT)}`,{level:"r"})
 });

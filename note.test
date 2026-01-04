@@ -1,0 +1,53 @@
+pm2 list                 # Check running processes
+pm2 logs school-backend  # View logs
+pm2 restart school-backend
+pm2 stop school-backend
+pm2 delete all           # Delete all processes
+pm2 flush                # Clear logs
+pm2 kill                 # Stop PM2 daemon
+
+
+
+
+
+
+
+
+
+
+
+
+Explanation:
+
+/controllers → API ke request-response handle karte hain (HTTP logic).
+
+/services → Business logic aur DB queries handle karte hain. Ye functions reusable hote hain, controller me sirf call karte hain.
+
+/models → Mongoose schemas.
+
+/routes → API routes define karte hain, controllers ko attach karte hain.
+
+/utils → Generic helpers (e.g., nanoid generator, date helpers).
+
+/middlewares → Auth, validation, error handling, etc.
+
+
+
+/src
+  /controllers
+    studentController.js
+    feeController.js
+  /models
+    student_model.js
+    studentsFeesModel.js
+  /services
+    studentService.js    <-- yaha rakhna chahiye
+    feeService.js        <-- fee related logic yaha
+  /routes
+    studentRoutes.js
+    feeRoutes.js
+  /utils
+    nanoidGenerator.js   <-- nanoid ya common helpers
+  /middlewares
+    auth.js
+    errorHandler.js

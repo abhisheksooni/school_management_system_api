@@ -6,7 +6,10 @@ import { devLog } from '../utils/devlogger.js';
 dotenv.config();
 
 // const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/school_management';
-const MONGO_URI = process.env.MONGO_URI;
+
+
+// const MONGO_URI = process.env.MONGO_URI;  // local connect
+const MONGO_URI = process.env.MONGO_CLOUD_URI; // mongo atlas connect
 
 const connectDB = async () => {
   try {

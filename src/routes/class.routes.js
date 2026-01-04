@@ -12,11 +12,14 @@ import {
   getSubjects,
   updateSubject,
 } from "../controllers/class/subject_controller.js";
+import { getClassController, getClassWithAllStudentsControler, getOneClassControler } from "../controllers/class/class.controller.js";
+import { getOneClass } from "../services/class.service.js";
 
 const router = Router();
 
 // class
 router.post("/class", createClassz);
+router.post("/class/info", getOneClassControler);
 router.get("/class", getAllClasses);
 router.put("/class/:id", updateClass);
 router.delete("/class/:id", deleteClass);
@@ -30,6 +33,20 @@ router.put("/subject/:id", updateSubject);
 // class With Subjects
 router.get("/class_with_subjects", getAllClassesWithSubjects);
 router.put("/class_with_subjects/:id", updateClassWithSubjects);
+
+/**
+ * New sev , controller , With Repo
+ */
+
+router.get("/class/sort", getClassController);
+router.post("/class/students", getClassWithAllStudentsControler);
+
+
+
+
+
+
+
 
 // Marks
 

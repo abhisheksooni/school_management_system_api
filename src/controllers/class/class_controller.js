@@ -1,12 +1,20 @@
+
+
 import {
   ClassSubject,
   SchoolClass,
 } from "../../models/student/student_model.js";
+import { devLog } from "../../utils/devlogger.js";
+
 
 // create Class
 export const createClassz = async (req, res) => {
   try {
-    const { class_name, class_teacher, section } = req.body;
+    
+
+
+
+    const { class_name, class_teacher, section} = req.body;
     // console.log(req.body);
 
     const newClass = new SchoolClass({
@@ -14,7 +22,6 @@ export const createClassz = async (req, res) => {
       section,
       class_teacher_name: class_teacher,
       //   subjects_ids,
-      //   students_ids
       //   class_teacher_code: teacher_code,
     });
 
@@ -75,14 +82,19 @@ export const getAllClasses = async (req, res) => {
 export const updateClass = async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await SchoolClass.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+
+    devLog(`Update Class `,{id:id , level:"r", data:req.body})
+    // const updated = await SchoolClass.findByIdAndUpdate(id, req.body, {
+    //   new: true,
+    // });
+    let updated=  "aaa"
+    devLog(`Update Class data`,{ level:"s", data:updated})
     return res
       .status(200)
       .json({ success: true, message: "Class updated", data: updated });
   } catch (error) {
-    console.error("Error updating class", error);
+    devLog(`Update Class Error`,{level:"err", data:error})
+    // console.error("Error updating class", error);
     return res
       .status(500)
       .json({ success: false, message: "Error updating class", error });

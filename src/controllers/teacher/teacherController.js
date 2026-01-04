@@ -7,6 +7,7 @@ import {
 } from "../../models/teacher/teacher_model.js";
 import slug from "slug";
 import { customAlphabet } from "nanoid";
+import { devLog } from "../../utils/devlogger.js";
 
 // Create Teacher with all data ---------------
 export const createTeacherAllDataController = async (req, res) => {
@@ -15,24 +16,34 @@ export const createTeacherAllDataController = async (req, res) => {
     const {
       first_name,
       last_name,
+      profile_image,
       subject,
       phone_no,
-      profile_image,
+
       school_class_id,
+
+      years_of_experience,
       gender,
       dob,
+      address,
       qualifications,
       role,
-      address,
-      years_of_experience,
-      salary,
+      isVerified,
+
       joined_date,
+
       studentCreatePermissionStatus, //boolean
       studentAttendanceStatus, //boolean
+
+      salary,
+      deductions,
+      month,
+      year,
+      payments,
+      bonuses,
     } = req.body;
 
     console.log("req---", req.body);
-
     // const profile_image = await req.files?.profile_image
     //   ? `uploads/staff/${req.files.profile_image[0].filename}`
     //   : existingStudent.profile_image;
@@ -66,7 +77,10 @@ export const createTeacherAllDataController = async (req, res) => {
       gender,
       date_of_birth: dob,
       address,
-      joined_at: new Date(joined_date),
+      joined_at: isNaN(new Date(joined_date))
+        ? new Date()
+        : new Date(joined_date),
+
       role,
     });
 
@@ -90,7 +104,12 @@ export const createTeacherAllDataController = async (req, res) => {
     const staffSalary = await StaffSalary.create({
       teacher_id: teacherProfile._id,
       base_salary: salary, // FIXED AMOUNT SALARY
-      // bonuses: 0,
+      month,
+      year,
+      payments,
+      bonuses,
+      deductions,
+      // net_salary
     });
 
     teacherProfile.staff_Salary_id = staffSalary._id;
@@ -116,20 +135,27 @@ export const createTeacherController = async (req, res) => {
     const {
       first_name,
       last_name,
-      full_name,
+      profile_image,
       subject,
       phone_no,
-      profile_image,
+
       school_class_id,
-      gender,
-      dob,
-      qualifications,
+
+      full_name,
       username,
       password,
-      role,
-      address,
       years_of_experience,
+      gender,
+      dob,
+      address,
+      qualifications,
+
+      isVerified,
+      role,
       subjects_id,
+
+      studentAttendanceStatus,
+      addStudentPermissionStatus,
     } = req.body;
 
     console.log("create teacher data-- ", req.body);
@@ -206,21 +232,27 @@ export const getAllTeachersController = async (req, res) => {
 export const getTeacherByIdController = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher_id = id;
+    // const teacher_id = id;
 
-    const getTeacher = await TeacherProfile.findById(teacher_id)
+ 
+
+    const result = await TeacherProfile.findById(id)
       .populate("basic_info_id")
-      .populate("staff_Salary_id")
-      .populate("teacher_auth_id");
+      // .populate("staff_Salary_id")
+      .populate("teacher_auth_id")
+      .populate({
+    path: "staff_Salary_id",
+    populate: { path: "payments" } // nested population
+  })
 
-    if (!getTeacher) {
+    if (!result) {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
     return res.status(200).json({
       success: true,
       message: "Teacher get successfully",
-      data: getTeacher,
+      data: result,
     });
 
     // const allTeachers = await Teachers.find
@@ -231,7 +263,6 @@ export const getTeacherByIdController = async (req, res) => {
 };
 
 export const updateTeacherAllDataController = async (req, res) => {
-
   console.log(req.body);
 
   try {
@@ -253,8 +284,10 @@ export const updateTeacherAllDataController = async (req, res) => {
       years_of_experience,
       salary,
       joined_date,
+
       studentCreatePermissionStatus, //boolean
       studentAttendanceStatus, //boolean
+      isVerified,
     } = req.body;
 
     console.log("teacher update controler -- > ", req.body);
@@ -361,8 +394,23 @@ export const updateTeacherAllDataController = async (req, res) => {
     const updatedTeacher = await TeacherProfile.findById(teacher_id)
       .populate("basic_info_id")
       .populate("teacher_auth_id")
-      .populate("staff_Salary_id")
-      .populate("school_class_ids");
+      .populate("staff_Salary_id ")
+      .populate("school_class_ids")
+    //   .populate({
+    //     path: "staff_Salary_id",
+    //     populate: { path: "payments" }, // nested population
+    //   });
+
+  //   const updatedTeacher = await TeacherProfile.findById(teacher_id)
+  // .populate("basic_info_id")
+  // .populate("teacher_auth_id")
+  // .populate({
+  //   path: "staff_Salary_id",
+  //   populate: { path: "payments" } // nested population
+  // })
+  // .populate("school_class_ids");
+
+    // .lean();
 
     // ================== 7️⃣ Send Response ===================
 
@@ -372,7 +420,7 @@ export const updateTeacherAllDataController = async (req, res) => {
       data: updatedTeacher,
     });
   } catch (error) {
-    console.error("Teacher update error:", error);
+    devLog("Teacher update error:", { data: error, level: "err" });
     return res.status(500).json({
       success: false,
       message: "Teacher Error in UPDATE",
@@ -455,10 +503,9 @@ export const deleteTeacherProfileWithAllData = async (req, res) => {
 
 export const getTeachersByPreviewListController = async (req, res) => {
   try {
+    const lengthPreviewList = await TeacherProfile.countDocuments();
 
-    const lengthPreviewList = await TeacherProfile.countDocuments()
-
-   const previewList = await TeacherProfile.aggregate([
+    const previewList = await TeacherProfile.aggregate([
       {
         $lookup: {
           from: "teachersbasicinfos", // replace with your actual collection name
@@ -488,8 +535,12 @@ export const getTeachersByPreviewListController = async (req, res) => {
           full_name: 1,
           teacher_code: 1,
           profile_role: { $arrayElemAt: ["$basic_info.role", 0] },
-          studentAttendanceStatus: { $arrayElemAt: ["$auth_info.studentAttendanceStatus", 0] },
-          addStudentPermissionStatus: { $arrayElemAt: ["$auth_info.addStudentPermissionStatus", 0] },
+          studentAttendanceStatus: {
+            $arrayElemAt: ["$auth_info.studentAttendanceStatus", 0],
+          },
+          addStudentPermissionStatus: {
+            $arrayElemAt: ["$auth_info.addStudentPermissionStatus", 0],
+          },
           accountStatus: { $arrayElemAt: ["$auth_info.accountStatus", 0] },
           // school_class_ids: "$classes",
         },
@@ -503,7 +554,7 @@ export const getTeachersByPreviewListController = async (req, res) => {
         //   school_class_ids: "$classes",
         // },
       },
-    ]); 
+    ]);
     //  const teachersLists = await TeacherProfile.find()
     //   .populate("basic_info_id") // profile_roll,
     //   .populate("teacher_auth_id") // studentAttendanceStatus , addStudentPermissionStatus , accountStatus
@@ -534,9 +585,8 @@ export const getTeachersByPreviewListController = async (req, res) => {
       success: false,
       message: "Server error while fetching teachers preview list",
     });
-  };
-
-}
+  }
+};
 
 // const salary = new TeacherSalary({
 //   teacher_id: someTeacherId,

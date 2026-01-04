@@ -26,7 +26,7 @@ const TeachersBasic = new mongoose.Schema(
       // default: "N/A",
     },
     date_of_birth: {
-      type: Date,
+      type: String,
       // default: "N/A",
     },
 
@@ -35,7 +35,7 @@ const TeachersBasic = new mongoose.Schema(
     qualifications: [String], // e.g., ["B.Ed", "M.Sc"]
 
     joined_at: {
-      type: Date,
+      type: String,
       default: Date.now,
     },
     // ✅ New additions:
@@ -49,10 +49,10 @@ const TeachersBasic = new mongoose.Schema(
         "staff",
         "dev",
         "accountant",
-        "bus_staff",
       ],
       // enum: ["teacher", "admin", "principal", "hod", "staff", "other"],
       default: "teacher",
+        required: true,
     },
   },
   { timestamps: true }
@@ -70,8 +70,13 @@ const TeacherAuth = new mongoose.Schema({
     type: String,
     enum: ["active", "inactive"],
     default: "active",
+      required: true,
   }, // Account activity status
-
+  
+// accountStatus: {
+//     type: Boolean,
+//     default: true,
+//   },
   addStudentPermissionStatus: {
     type: Boolean,
     default: false,
@@ -102,10 +107,32 @@ export const TeacherAuthModel = mongoose.model("TeacherAuth", TeacherAuth);
       enum: ["Cash", "Bank Transfer", "UPI", "Cheque"],
       default: "Cash",
     },
+
+    month:{
+      type:String
+    },
+
+    //   month: {
+    //   type: Number,
+    //   required: true,
+    //   min: 1,
+    //   max: 12,
+    //   default: new Date().getMonth() + 1,
+    // }, // Month (1-12)
+year: { type: Number, required: true, default: new Date().getFullYear() }, // Year e.g. 2025
+
     transaction_id: { type: String, default: "" },
   },
   { timestamps: true }
 );
+
+/* --------------------------------------------
+   // Prevent duplicate salary entries per teacher per month/year
+-------------------------------------------- */
+// salaryPayments.index(
+//   { salary_id: 1, month: 1, year: 1 },
+//   { unique: true }
+// );
 
 export const salaryPaymentsModel = mongoose.model(
   "salaryPayments",
@@ -125,7 +152,7 @@ const teacherSalarySchema = new mongoose.Schema(
     base_salary: { type: Number, default: 0 }, // Fixed salary per month
     bonuses: { type: Number, default: 0 }, // Extra bonuses (if any)
     deductions: { type: Number, default: 0 }, // Penalties or deductions
-    net_salary: { type: Number, default: 0 }, // Calculated net salary (base + bonus - deductions)
+    net_salary: { type: Number, default: 0 }, // net salary (base_salary + bonuses - deductions) Calculated 
     // pending_amount:{type:Number , default:0} ,
     month: {
       type: Number,
@@ -150,7 +177,7 @@ const teacherSalarySchema = new mongoose.Schema(
 );
 
 /* --------------------------------------------
-   Prevent duplicate salary entries
+   // Prevent duplicate salary entries per teacher per month/year
 -------------------------------------------- */
 teacherSalarySchema.index(
   { teacher_id: 1, month: 1, year: 1 },
@@ -158,74 +185,61 @@ teacherSalarySchema.index(
 );
 
 /* --------------------------------------------
- Auto calculate net salary on SAVE
+  Auto calculate net_salary & status on save
 -------------------------------------------- */
-teacherSalarySchema.pre("save", function (next) {
-  this.net_salary =
-    (this.base_salary || 0) + (this.bonuses || 0) - (this.deductions || 0);
+teacherSalarySchema.pre("save", async function (next) {
 
-  const totalPaid = this.payments.reduce((sum, p) => sum + p.payment_amount, 0);
-
-  this.status = totalPaid >= this.net_salary ? "paid" : "pending";
-
-  next();
-});
-
-// Auto calculate net_salary
-teacherSalarySchema.pre("save", function(next) {
   this.net_salary = (this.base_salary || 0) + (this.bonuses || 0) - (this.deductions || 0);
+
+  if (this.populated("payments")) {
+    const totalPaid = this.payments.reduce((sum, p) => sum + p.payment_amount, 0);
+    this.status = totalPaid >= this.net_salary ? "paid" : "pending";
+  }
   next();
 });
 
 
-// const salary = await StaffSalary.findById(salaryId)
-//   .populate({ path: 'payments', select: 'payment_amount payment_date payment_mode transaction_id' });
+/* --------------------------------------------
+   Virtual for pending_amount
+-------------------------------------------- */
+teacherSalarySchema.virtual("pending_amount").get(function () {
+  const paid = this.payments?.reduce((sum, p) => sum + p.payment_amount, 0) || 0;
+  return this.net_salary - paid;
+});
 
-// salary.populatedPayments = salary.payments;
-// console.log("Pending:", salary.pending_amount);
 
 
 /* --------------------------------------------
    Pre-update: Auto calculate net salary on UPDATE
 -------------------------------------------- */
-teacherSalarySchema.pre("findOneAndUpdate", async function (next) {
-  const update = this.getUpdate();
-  const doc = await this.model.findOne(this.getQuery());
+// teacherSalarySchema.pre("findOneAndUpdate", async function (next) {
+//   const update = this.getUpdate();
+//   const doc = await this.model.findOne(this.getQuery());
 
-  // merge (do not overwrite) payments
-  if (update.$push?.payments) {
-    update.payments = [...doc.payments, update.$push.payments];
-    delete update.$push;
-  }
+//   // merge (do not overwrite) payments
+//   if (update.$push?.payments) {
+//     update.payments = [...doc.payments, update.$push.payments];
+//     delete update.$push;
+//   }
 
-  // Correct calculation for partial updates
-  const base = update.base_salary ?? doc.base_salary;
-  const bonus = update.bonuses ?? doc.bonuses;
-  const ded = update.deductions ?? doc.deductions;
+//   // Correct calculation for partial updates
+//   const base = update.base_salary ?? doc.base_salary;
+//   const bonus = update.bonuses ?? doc.bonuses;
+//   const ded = update.deductions ?? doc.deductions;
 
-  update.net_salary = base + bonus - ded;
+//   update.net_salary = base + bonus - ded;
 
-  // recalc status if payments updated
-  if (update.payments) {
-    const totalPaid = update.payments.reduce(
-      (sum, p) => sum + p.payment_amount,
-      0
-    );
-    update.status = totalPaid >= update.net_salary ? "paid" : "pending";
-  }
+//   // recalc status if payments updated
+//   if (update.payments) {
+//     const totalPaid = update.payments.reduce(
+//       (sum, p) => sum + p.payment_amount,
+//       0
+//     );
+//     update.status = totalPaid >= update.net_salary ? "paid" : "pending";
+//   }
 
-  next();
-});
-
-/* --------------------------------------------
-   Virtual: Pending amount (not stored in DB)
--------------------------------------------- */
-teacherSalarySchema.virtual("pending_amount").get(function () {
-  if (!this.populatedPayments) return undefined;
-
-  const paid = this.payments.reduce((sum, p) => sum + p.payment_amount, 0);
-  return this.net_salary - paid;
-});
+//   next();
+// });
 
 export const StaffSalary = mongoose.model("StaffSalary", teacherSalarySchema);
 

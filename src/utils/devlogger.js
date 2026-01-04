@@ -51,7 +51,7 @@ export const devLog = (message, options = {}) => {
     //   break;
 
     default:
-      prefix = chalk.blue(`[ℹ️ INFO   ${time}]`);
+      prefix = chalk.blue(`[ ℹ️ INFO   ${time} ]`);
   }
 
   let meta = "";
