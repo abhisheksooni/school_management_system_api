@@ -1,5 +1,0 @@
-{
-    "javascript.validate.enable": true,
-    "files.autoSaveDelay": 2000,
-    "files.autoSave": "afterDelay"
-}

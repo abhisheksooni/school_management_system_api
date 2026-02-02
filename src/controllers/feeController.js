@@ -73,12 +73,23 @@ export const getOneFeeTemplatebreakdown = async (req, res) => {
 
 
 
-    // const breakdown = await FeeTemplate.findById(req.params.id).populate([
-    //   { path: "class", select: "section name" },
-    // ]);
-    const breakdown = await FeeTemplate.findOne({class:req.params.id}).populate([
+    let breakdown = await FeeTemplate.findById(req.params.id).populate([
       { path: "class", select: "section name" },
     ]);
+
+    // if (!breakdown) {
+    // breakdown  = await FeeTemplate.findById(req.params.id).populate([
+    //   { path: "class", select: "section name" },
+    // ]);
+    // }
+
+
+    // if (!breakdown) {
+    //   breakdown = await FeeTemplate.findOne({class:req.params.id}).populate([
+    //   { path: "class", select: "section name" },
+    // ]);
+    // }
+   
 
     return res.status(201).json({ success: true, data: breakdown });
   } catch (error) {

@@ -4,15 +4,17 @@ import cors from "cors";
 import path from "path";
 import chalk from "chalk";
 
+import { devLog } from "./src/utils/devlogger.js";
 
 import connectDB from "./src/config/db.js";
 
+
+// Routes
 import Student from "./src/routes/student.routes.js";
 import Teacher from "./src/routes/teacher.routes.js";
 import Class from "./src/routes/class.routes.js";
 import StudentFee from "./src/routes/fee.Routes.js";
 import auth from "./src/routes/auth.routes.js";
-import { devLog } from "./src/utils/devlogger.js";
 
 // Load env vars
 dotenv.config();

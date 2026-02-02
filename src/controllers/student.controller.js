@@ -1,35 +1,30 @@
 import * as studentService from "../services/student.service.js";
 import { devLog } from "../utils/devlogger.js";
 
-export const createssStudent = async (req, res) => {
-  try {
-    const result = await serviesFun_NAme(req);
-
-    return res.status(200).json({
-      success: true,
-      length: lengthStudents,
-      data: Students,
-      message: "All Student found",
-      // data1: students,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "All Student Not found",
-      error: error.message,
-    });
-  }
-};
+let logName = "Student Controler "
 
 // getShortDataStudents
 
 export const getStudents = async (req, res) => {
   try {
-    const result = await studentService.getAllStudents();
+
+   const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+     const result = await studentService.getAllStudents({
+      page,
+      limit,
+    });
+
+    // const result = await studentService.getAllStudents();
 
     return res.status(200).json(result);
 
   } catch (error) {
+      devLog(`Error ${logName} getStudents  `, {
+          level: "err",
+          data: error,
+        });
     return res.status(500).json({
       success: false,
       message: "All Student Not found",
@@ -40,15 +35,13 @@ export const getStudents = async (req, res) => {
 
 export const getStudentById = async (req, res) => {
   try {
-      const { id } = req.params;
-    const student_id = id;
 
-    const result = await studentService.getByIdStudents(student_id);
+    const result = await studentService.getByIdStudents(req);
 
     return res.status(200).json(result);
 
   } catch (error) {
-      devLog(`Error getStudentById controller `, {
+      devLog(`Error ${logName} getStudentById`, {
           level: "err",
           data: error,
         });
@@ -61,19 +54,30 @@ export const getStudentById = async (req, res) => {
 };
 
 
+export const getAllDataStudent = async (req,res)=>{
+  try {
+    
+    const result = await studentService.getByIdStudents(res)
+ return res.status(200).json(result);
+
+  } catch (error) {
+      devLog(`Error ${logName} getAllDataStudent  `, {
+          level: "err",
+          data: error,
+        });
+     return res.status(500).json({
+      success: false,
+      message: "Student Not found",
+      error: error.message,
+    });
+  }
+}
 
 
 
 
 
-
-
-
-
-export const funName = async (req, res) => {};
-
-
-export const createStudent = async (req, res) => {
+export const createStudentContrller = async (req, res) => {
   try {
     const result = await studentService.createStudentWithAllData(req.body);
 
@@ -81,7 +85,7 @@ export const createStudent = async (req, res) => {
 
     
   } catch (error) {
-    devLog(`Error createStudent controller `, {
+    devLog(`Error ${logName}createStudentContrller  `, {
           level: "err",
           data: error,
         });
@@ -102,7 +106,7 @@ export const updateStudent = async (req, res) => {
 
 
   } catch (error) {
-    devLog("Update Student Error", { level: "err", data: error.message });
+    devLog(`Error ${logName} Update Student `, { level: "err", data: error.message });
     return res.status(500).json({
       success: false,
       message: "Student update Failed",
@@ -111,6 +115,24 @@ export const updateStudent = async (req, res) => {
   }
 };
 
+ export const deleteStudentWithAllData = async (req,res)=>{
+  try {
+    
+ const result = await studentService.deleteStudentWithAllData(req)
+ return res.status(200).json(result);
 
+
+  } catch (error) {
+     devLog(`Error ${logName} deleteStudentWithAllData  `, {
+          level: "err",
+          data: error,
+        });
+     return res.status(500).json({
+      success: false,
+      message: "Student Not found",
+      error: error.message,
+    });
+  }
+ }
 
 

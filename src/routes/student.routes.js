@@ -14,9 +14,7 @@ import {
   deleteFeesInfo,
   getStudentFeesFullInfo,
   getStudentsFeesFullInfo,
- 
 } from "../controllers/students/feesController.js";
-
 
 import {
   getMonthlyAttendance,
@@ -28,8 +26,12 @@ import multer from "multer";
 import { processFiles, uploadFiles } from "../middlewares/uploadMiddleware.js";
 import { studentSearch } from "../services/studentsSearch.js";
 import { createFeeTemplatebreakdown } from "../controllers/feeController.js";
-import * as students from "../controllers/student.controller.js";
-import * as studentsAttendance from "../controllers/students/attendance.controller.js"
+
+// * New setup
+
+import * as StudentController from "../controllers/student.controller.js";
+import * as studentsAttendance from "../controllers/students/attendance.controller.js";
+
 // const storage = multer.diskStorage({
 //   destination: (req, file, cb) => cb(null, "uploads/"),
 //   filename: (req, file, cb) =>
@@ -41,9 +43,21 @@ import * as studentsAttendance from "../controllers/students/attendance.controll
 const router = Router();
 
 // router.get("/students", getAllStudents); // Get All Students
-router.get("/students", students.getStudents); // Get All Students
+// REQ --- GET /students?page=1&limit=10
+// Optional--- GET /students?page=1&limit=10&search=ali&sort=roll_number
+
+
+
+
+// router.get("/students", StudentController.getStudents); // Get All Students
+router.get("/students", StudentController.getStudents); // Get All Students
 router.post("/students/:id", getStudentById); // POST Get Student by ID
-router.post("/students", uploadFiles, processFiles, students.createStudent);
+router.post(
+  "/students",
+  uploadFiles,
+  processFiles,
+  StudentController.createStudentContrller
+);
 // router.post("/students", uploadFiles, processFiles, createWithAllDataStudent);
 
 router.put(
@@ -55,12 +69,9 @@ router.put(
 router.post("/students/alldata/:id", getAllDataStudent); // get Full data
 
 // delet Student With All data
-router.delete("/students/delete/:id",deleteStudentWithAllData)
+router.delete("/students/delete/:id", deleteStudentWithAllData);
 
-
-router.get("/students/search",studentSearch)
-
-
+router.get("/students/search", studentSearch);
 
 // const uploadImage = await createUploadMiddleware("student");
 
@@ -97,33 +108,19 @@ router.get("/students/search",studentSearch)
 
 //   }); // Create Student
 
-
 // =========================================
 // Students Fee routes
 // =========================================
 
 router.post("/students/fees/:id", createFeesInfo); // create FeesInfo for student
 router.put("/students/fees/:id/payment", addPaymentToFeesInfo);
-router.post("/students/fees/full/:id",getStudentFeesFullInfo );
-router.get("/students/fees",getStudentsFeesFullInfo);
-
-
-
+router.post("/students/fees/full/:id", getStudentFeesFullInfo);
+router.get("/students/fees", getStudentsFeesFullInfo);
 
 // router.get("/students/fees", getAllStudentsFeesInfoOnly ) //get All Students fees data basic info
 // router.get("/students/fees", getStudentFeesInfo ) //get All Students fees
 // router.get("/students/fees/:id/payment", getPayments ) //get All Students fees
 // router.delete("/students/fees/:id/payment", deleteFeesInfo );
-
-
-
-
-
-
-
-
-
-
 
 // =========================================
 //  Student Attendance //
@@ -135,18 +132,20 @@ router.post("/students/attendance/bulk", markBulkAttendance);
 // =====================
 // GET /attendance/student/:studentId?from=2025-12-01&to=2025-12-31
 // Student ki attendance (date range ke saath)
-//  Ek student ki monthly / weekly attendance 
-router.get("/students/attendance",studentsAttendance.getAttendanceByStudent); // req Query
+//  Ek student ki monthly / weekly attendance
+router.get("/students/attendance", studentsAttendance.getAttendanceByStudent); // req Query
 
 // Aaj class 10A me kaun present / absent
-router.get("/students/attendance/class",studentsAttendance.getAttendanceByClassController); // req Query
-
+router.get(
+  "/students/attendance/class",
+  studentsAttendance.getAttendanceByClassController
+); // req Query
 
 // * 4️⃣ Monthly Attendance Percentage (Student‑wise)
 // Report card / progress report
-router.get("/students/attendance/monthly",studentsAttendance.getStudentMonthlyAttendanceController); // req Query
-
-
-
+router.get(
+  "/students/attendance/monthly",
+  studentsAttendance.getStudentMonthlyAttendanceController
+); // req Query
 
 export default router;

@@ -19,7 +19,7 @@ export const findStudentOne = async (data) => {
 };
 
 // Only basic info
-export const findStudentsBasicInfo = async () => {
+export const findStudentsBasicInfo = async (skip, limit) => {
   return await StudentProfile.aggregate([
     {
       $project: {
@@ -30,6 +30,8 @@ export const findStudentsBasicInfo = async () => {
         profile_image: 1,
       },
     },
+      { $skip: skip },
+    { $limit: limit },
   ]);
 };
 

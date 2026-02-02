@@ -19,7 +19,7 @@ import { generateNanoID } from "../../utils/nanoidGenerator.js";
 import { responseHandler } from "../../utils/index.js";
 
 //  =============  POST/ CREATE STUDENT  ==============
-
+ 
 export const createWithAllDataStudent = async (req, res) => {
   try {
    

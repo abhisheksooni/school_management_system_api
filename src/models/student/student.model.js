@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
 import { generateNanoID } from "../../utils/nanoidGenerator";
 
-
+ 
 /* =====================================================
    🧍‍♂️ STUDENT PARENT INFORMATION
    ===================================================== */

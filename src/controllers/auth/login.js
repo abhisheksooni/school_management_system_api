@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
-import { StudentAuthInfo, StudentProfile } from "../../models/student/student_model.js";
+import {
+  StudentAuthInfo,
+  StudentProfile,
+} from "../../models/student/student_model.js";
 import {
   TeacherAuthModel,
   TeacherProfile,
@@ -8,14 +11,10 @@ import {
 import { devLog } from "../../utils/devlogger.js";
 
 export const login = async (req, res) => {
-  let funName = "auth Login fun..";
+  let funName = "auth Login";
 
   try {
     const { username, password } = req.body;
-
-    let userId = "";
-    let userFullname = "";
-    let userRole = "";
 
     if (!username || !password) {
       return res
@@ -25,33 +24,60 @@ export const login = async (req, res) => {
 
     devLog(`${funName}`, { level: "r", data: req.body });
 
+    let userAuth = null;
+    let userRole = "";
+    let userId = "";
+    let userFullname = "";
+    let profile_image = "";
+
     // Check Teacher first
-    const user = await TeacherAuthModel.findOne({ username });
+    userAuth = await TeacherAuthModel.findOne({ username });
 
-    if (user) {
-      const a = await TeacherProfile.findOne({ teacher_auth_id: user._id });
-      const b = await TeachersBasicInfo.findOne({ teacher_id: a._id });
-
-      userFullname = await a.full_name;
-      userId = await a._id;
-      userRole = b.role;
+    if (userAuth) {
+      const profile = await TeacherProfile.findOne({
+        teacher_auth_id: userAuth._id,
+      });
+      const basicInfo = await TeachersBasicInfo.findOne({
+        teacher_id: profile._id,
+      });
+  
+      userId = profile._id;
+      userFullname = profile.full_name;
+       profile_image = profile?.profile_image;
+      userRole = basicInfo.role || "admin";
+    }
+    if (userAuth) {
+      const profile = await TeacherProfile.findOne({
+        teacher_auth_id: userAuth._id,
+      });
+      const basicInfo = await TeachersBasicInfo.findOne({
+        teacher_id: profile._id,
+      });
+  
+      userId = profile._id;
+      userFullname = profile.full_name;
+       profile_image = profile?.profile_image;
+      userRole = basicInfo.role || "teacher";
     }
 
-    //    let role = "teacher";
+    // If not teacher → check student
+    if (!userAuth) {
+      userAuth = await StudentAuthInfo.findOne({ username });
 
-    // Check Student if Teacher not found
-    if (!user) {
-      user = await StudentAuthInfo.findOne({ username });
+      if (userAuth) {
+        const profile = await StudentProfile.findOne({
+          auth_info_id: userAuth._id,
+        });
 
-       const a = await StudentProfile.findOne({ auth_info_id: user._id });
-      const b = await StudentAuthInfo.findOne({ student_id: a._id });
-      userFullname = await a.full_name;
-      userId = await a._id;
-      userRole = b.role;
+        userFullname = profile.full_name;
+        profile_image = profile?.profile_image;
+        userId = profile._id;
+        userRole = userAuth.role || "student";
+      }
     }
 
     // User not found
-    if (!user) {
+    if (!userAuth) {
       devLog(`${funName}`, { level: "w", module: "user not found" });
       return res.status(401).json({
         success: false,
@@ -59,15 +85,14 @@ export const login = async (req, res) => {
       });
     }
 
-    // devLog(`${funName}`, { level: "i", module: "prosess",data:user });
+    
     // Password check
-    const isMatch = (await password) === user?.password;
-
+    const isMatch = (await password) == userAuth?.password;
+    // const isMatch = await bcrypt.compare(password, userAuth.password);
     // bugi hai >>
-    // const isMatch = await bcrypt.compare(password, user?.password);
-
+  
     if (!isMatch) {
-      devLog(`${funName}`, { level: "w", module: "Password mismatch" });
+      devLog(`${funName}`, { level: "w", module: "Password mismatch- Invalid credentials" });
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
@@ -75,8 +100,11 @@ export const login = async (req, res) => {
 
     // JWT Token generation
     const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || "secret123"
+      
+    {  userAuthId:userAuth._id,
+      role:userRole,
+    },
+    process.env.JWT_SECRET || "secret123"
       //   { expiresIn: "1d" }
     );
 
@@ -84,15 +112,16 @@ export const login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-    //   data: user,
-        data: {
-          userId: userId,
-          fullName: userFullname,
-          role:userRole,
-          userName:user.username,
-          userAuthId:user._id,
-          // permissions: user.permissions || {}
-        },
+  
+      user: {
+        userId: userId,
+        fullName: userFullname,
+        profile_image: profile_image,
+        role: userRole,
+        userName: userAuth.username,
+        userAuthId: userAuth._id,
+        // permissions: user.permissions || {}
+      },
       token,
       message: "Login successfully",
     });

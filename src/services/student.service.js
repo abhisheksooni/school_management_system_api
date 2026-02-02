@@ -2,33 +2,79 @@ import mongoose from "mongoose";
 import * as studentRepo from "../repository/studentRepo.js";
 import { devLog } from "../utils/devlogger.js";
 import { generateNanoID } from "../utils/nanoidGenerator.js";
-import { StudentAdvancedInfo, StudentAuthInfo, StudentBasicInfo, StudentFeesInfo, StudentParentsInfo } from "../models/student/student_model.js";
+import { StudentAdvancedInfo, StudentAuthInfo, StudentBasicInfo, StudentFeesInfo, StudentParentsInfo, StudentProfile } from "../models/student/student_model.js";
 
+let logname = ` Student -service- `
 
 //  =============  GET BY ID STUDENT FULL DATA  ==============
-export const getByIdStudents = async () => {
+export const getByIdStudents = async (data) => {
     devLog(`Find Student getByIdStudents`, {
     level: "p",
   });
-  const student = await studentRepo.findStudentByIdAllData();
+
+        const { id } = req.params;
+      const student_id = id;
+  
+  const result = await studentRepo.findStudentByIdAllData(student_id);
 //   const count = await studentRepo.countStudents();
+
+if (!result) {
+  throw new Error(` ${logname} Student Not found`)
+}
 
   return {
     success: true,
       message: "Find Student getByIdStudents",
-      data: student,
+      data: result,
   };
 };
 
 
-export const getAllStudents = async () => {
-devLog(`Student getAllStudents `, {
+export const getAllStudents = async ({page,limit}) => {
+devLog(` ${logname} getAllStudents `, {
     level: "r",
   });
+
+   const skip = (page - 1) * limit;
+ const students = await studentRepo.findStudentsBasicInfo(
+    skip,
+    limit
+  );
+
+
+  // const students = await studentRepo.findStudentsBasicInfo();
+  const count = await studentRepo.countStudents();
+
+devLog(`${logname} getAllStudents `, {
+    level: "s",
+  });
+  return {
+    success: true,
+    length: count,
+     pagination: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
+    data: students,
+    message: "All students found",
+  };
+};
+
+
+export const getAllDataStudent = async (data) => {
+devLog(` ${logname} getAllDataStudent `, {
+    level: "r",
+  });
+
+
+
   const students = await studentRepo.findStudentsBasicInfo();
   const count = await studentRepo.countStudents();
-devLog(`Student getAllStudents `, {
-    level: "p",
+
+devLog(`${logname} getAllDataStudent `, {
+    level: "s",
   });
   return {
     success: true,
@@ -37,6 +83,11 @@ devLog(`Student getAllStudents `, {
     message: "All students found",
   };
 };
+
+// CREATE V1.1
+export const createStudentNew = async(data)=>{
+ 
+}
 
 //  =============  CREATE STUDENT  ==============
 export const createStudentWithAllData = async (data) => {
@@ -137,8 +188,8 @@ export const createStudentWithAllData = async (data) => {
 // section.startTransaction();
 
 
-  devLog(`Start Create Student createWithAllDataStudent `, {
-    level: "p",
+  devLog(` ${logname} createStudentWithAllData `, {
+    level: "r",
   });
 
 
@@ -301,7 +352,7 @@ const findStudent = await studentRepo.findStudentByIdAllData(createStudent._id)
 
 
 
- devLog(`Create Student createStudentWithAllData `, {
+ devLog(` ${logname} createStudentWithAllData `, {
       level: "s",
       id: createStudent._id,
     });
@@ -412,7 +463,7 @@ export const updateStudentWithAllData = async (data)=>{
     // auth_info_id,
   } = data.body;
 
-devLog(` Update Student by updateStudentWithAllData`, {
+devLog(` ${logname} updateStudentWithAllData`, {
     id: student_id,
     level: "p",
   });
@@ -613,7 +664,7 @@ devLog(` Update Student by updateStudentWithAllData`, {
 
 const Student = await  studentRepo.findStudentByIdAllData(student._id)
 
-devLog(`Update Full Student by updateFullStudent`, {
+devLog(` ${logname} Update Full Student by updateFullStudent`, {
     id: student_id,
     level: "s",
   });
@@ -624,5 +675,83 @@ devLog(`Update Full Student by updateFullStudent`, {
     message: "Student Update successfully",
     data: Student,
   };
+
+}
+
+// ==============  DELETE STUDENT  ===============
+
+export const deleteStudentWithAllData = async(data)=>{
+
+   const student = await StudentProfile.findById(data.params.id);
+  
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: "Student not found",
+        });
+      }
+
+      devLog(` ${logname} DELETE Student by deleteStudentWithAllData`, {
+    id: student?._id,
+    level: "s",
+  });
+
+
+   // Helper function for safe delete with logging
+    const safeDelete = async (Model, id, name) => {
+      if (!id) {
+        console.warn(`⚠️  ${name} ID not found, skipping delete`);
+        return;
+      }
+      const result = await Model.findByIdAndDelete(id);
+      if (result) {
+        console.log(`✅ Deleted ${name}:`, id);
+      } else {
+        console.warn(`⚠️  ${name} not found with ID:`, id);
+      }
+    };
+
+
+  await safeDelete(
+      StudentBasicInfo,
+      student?.basic_info_id?._id || student?.basic_info_id,
+      "Student Basic Info"
+    );
+    await safeDelete(
+      StudentAdvancedInfo,
+      student?.advanced_info_id?._id || student?.advanced_info_id,
+      "Student Advanced Info"
+    );
+    await safeDelete(
+      StudentParentsInfo,
+      student?.parents_info_id?._id || student?.parents_info_id,
+      "Student Parents Info"
+    );
+    await safeDelete(
+      StudentAttendanceRecord,
+      student?.attendance_record_id?._id || student?.attendance_record_id,
+      "Student Attendance Record"
+    );
+    await safeDelete(
+      StudentFeesInfo,
+      student?.fees_info_id?._id || student?.fees_info_id,
+      "Student Fees Info"
+    );
+    await safeDelete(
+      StudentAuthInfo,
+      student?.auth_info_id?._id || student?.auth_info_id,
+      "Student Auth Info"
+    );
+
+// Finally delete the main StudentProfile
+    await StudentProfile.findByIdAndDelete(req.params.id);
+
+
+   return {
+      success: true,
+      message: "Student and all related data deleted successfully",
+      // data: dd,
+    };
+
 
 }
